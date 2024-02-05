@@ -1,0 +1,5 @@
+/.sqlx
+/db
+/errors
+/target
+*.env

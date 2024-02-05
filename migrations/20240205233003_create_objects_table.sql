@@ -1,0 +1,4 @@
+CREATE TABLE objects (
+  key TEXT PRIMARY KEY NOT NULL,
+  value JSON NOT NULL
+);
