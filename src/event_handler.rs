@@ -13,11 +13,11 @@ use crate::{
   utils::event_publisher::{AnyEvent, Event, EventPublisher},
 };
 
-type EventsHandler = Handler<'static, DependencyMap, ()>;
+type EventHandler = Handler<'static, DependencyMap, ()>;
 
 pub fn init(di: DependencyMap) {
-  let events_handler = dptree::entry().inspect(log_event_received);
-  tokio::spawn(launch(events_handler, di));
+  let event_handler = dptree::entry().inspect(log_event_received);
+  tokio::spawn(launch(event_handler, di));
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -25,11 +25,11 @@ fn log_event_received(event: Event) {
   log::info!("Receive event {event:?}");
 }
 
-fn filter_event<T: AnyEvent>() -> EventsHandler {
+fn filter_event<T: AnyEvent>() -> EventHandler {
   dptree::filter_map(|event: Event| event.downcast::<T>())
 }
 
-fn handler<F, A>(f: F) -> EventsHandler
+fn handler<F, A>(f: F) -> EventHandler
 where
   F: Injectable<DependencyMap, Result<()>, A> + Send + Sync + 'static,
   A: 'static,
@@ -70,24 +70,21 @@ where
   }
 }
 
-async fn launch(
-  events_handler: EventsHandler,
-  di: DependencyMap,
-) -> ! {
-  let events_handler = Arc::new(events_handler);
+async fn launch(event_handler: EventHandler, di: DependencyMap) -> ! {
+  let event_handler = Arc::new(event_handler);
   let mut events =
     DependencySupplier::<Arc<EventPublisher>>::get(&di).subscribe();
   loop {
     let event = events.recv().await.unwrap();
     let mut di = di.clone();
     di.insert(event);
-    tokio::spawn(dispatch(events_handler.clone(), di));
+    tokio::spawn(dispatch(event_handler.clone(), di));
   }
 }
 
 async fn dispatch(
-  events_handler: Arc<EventsHandler>,
+  event_handler: Arc<EventHandler>,
   di: DependencyMap,
 ) {
-  events_handler.dispatch(di).await;
+  event_handler.dispatch(di).await;
 }
