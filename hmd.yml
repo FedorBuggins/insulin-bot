@@ -1,0 +1,6 @@
+ssh_address: VanyaGiftServer
+project: insulin-bot
+artifacts: [.env]
+test: cargo test
+build: cargo build --release
+run: cargo run --release
