@@ -8,11 +8,12 @@ extern crate insulin_bot as lib;
 
 use std::{error::Error, sync::Arc};
 
-use commands::send_help;
+use bot_commands::StartCommand;
+use commands::{add_user, send_help};
 use dotenv::dotenv;
 use lib::{common, db, utils};
 use teloxide::{
-  dispatching::{DpHandlerDescription, UpdateFilterExt},
+  dispatching::{DpHandlerDescription, HandlerExt, UpdateFilterExt},
   dptree::{
     case,
     di::{Asyncify, Injectable},
@@ -25,7 +26,7 @@ use teloxide::{
 };
 
 use crate::{
-  bot_commands::BotCommand, common::Result,
+  bot_commands::MenuCommand, common::Result,
   utils::event_publisher::EventPublisher,
 };
 
@@ -46,7 +47,7 @@ async fn launch_bot() -> Result<(), Box<dyn Error>> {
   let bot = Bot::from_env();
 
   log::debug!("Update commands ..");
-  bot.set_my_commands(BotCommand::bot_commands()).await?;
+  bot.set_my_commands(MenuCommand::bot_commands()).await?;
 
   log::debug!("Connect database ..");
   let db = Arc::new(db::connect().await?);
@@ -86,8 +87,16 @@ async fn init_dispatcher(bot: Bot, di: DependencyMap) -> Result<()> {
 
 fn command_handler() -> UpdateHandler {
   filter_message()
-    .filter_command::<BotCommand>()
-    .branch(case![BotCommand::Help].endpoint(send_help))
+    .branch(
+      dptree::entry()
+        .filter_command::<StartCommand>()
+        .endpoint(add_user),
+    )
+    .branch(
+      dptree::entry()
+        .filter_command::<MenuCommand>()
+        .branch(case![MenuCommand::Help].endpoint(send_help)),
+    )
 }
 
 fn filter_message() -> UpdateHandler {

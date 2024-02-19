@@ -1,11 +1,14 @@
 pub mod json_cell;
 pub mod txn;
+pub mod user_repository;
 
 use std::{env, error::Error, sync::Arc};
 
 use sqlx::{sqlite::SqlitePoolOptions, Result, SqlitePool};
 
 pub use json_cell::JsonCell;
+
+use self::{txn::ExecutorHolder, user_repository::UserRepository};
 
 const DATABASE_URL: &str = "DATABASE_URL";
 
@@ -32,6 +35,10 @@ impl Db {
   #[must_use]
   pub fn json_cell<T>(&self, key: impl Into<String>) -> JsonCell<T> {
     JsonCell::new(self.pool.clone(), key.into())
+  }
+
+  pub fn users(&self) -> UserRepository {
+    UserRepository::new(ExecutorHolder::new(self.pool()))
   }
 }
 
