@@ -1,15 +1,15 @@
 mod bot_commands;
 mod commands;
-mod env;
 mod event_handler;
 mod logging;
 mod schedules;
 
 extern crate insulin_bot as lib;
-use lib::{common, db, utils};
 
 use std::{error::Error, sync::Arc};
 
+use dotenv::dotenv;
+use lib::{common, db, utils};
 use teloxide::{
   dispatching::{DpHandlerDescription, UpdateFilterExt},
   dptree::{
@@ -32,7 +32,7 @@ type UpdatesHandler =
   Handler<'static, DependencyMap, Result<()>, DpHandlerDescription>;
 
 fn main() -> Result<(), Box<dyn Error>> {
-  env::init()?;
+  dotenv()?;
   logging::init();
   tokio::runtime::Builder::new_multi_thread()
     .enable_all()
