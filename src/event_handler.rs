@@ -10,13 +10,21 @@ use tokio::time::sleep;
 use crate::{
   common::Result,
   logging,
+  schedules::LongInsulinReminderScheduled,
   utils::event_publisher::{AnyEvent, Event, EventPublisher},
 };
 
 type EventHandler = Handler<'static, DependencyMap, ()>;
 
 pub fn init(di: DependencyMap) {
-  let event_handler = dptree::entry().inspect(log_event_received);
+  let event_handler = dptree::entry()
+    .inspect(log_event_received)
+    .branch(filter_event::<LongInsulinReminderScheduled>().chain(
+      handler(|| async {
+        log::info!("Long Insulin Reminder! (todo)");
+        Ok(())
+      }),
+    ));
   tokio::spawn(launch(event_handler, di));
 }
 

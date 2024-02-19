@@ -1,15 +1,16 @@
 mod bot_commands;
 mod commands;
-mod env;
 mod event_handler;
 mod logging;
 mod schedules;
 
 extern crate insulin_bot as lib;
-use lib::{common, db, utils};
 
 use std::{error::Error, sync::Arc};
 
+use commands::send_help;
+use dotenv::dotenv;
+use lib::{common, db, utils};
 use teloxide::{
   dispatching::{DpHandlerDescription, UpdateFilterExt},
   dptree::{
@@ -28,11 +29,11 @@ use crate::{
   utils::event_publisher::EventPublisher,
 };
 
-type UpdatesHandler =
+type UpdateHandler =
   Handler<'static, DependencyMap, Result<()>, DpHandlerDescription>;
 
 fn main() -> Result<(), Box<dyn Error>> {
-  env::init()?;
+  dotenv()?;
   logging::init();
   tokio::runtime::Builder::new_multi_thread()
     .enable_all()
@@ -83,13 +84,13 @@ async fn init_dispatcher(bot: Bot, di: DependencyMap) -> Result<()> {
   Ok(())
 }
 
-fn command_handler() -> UpdatesHandler {
+fn command_handler() -> UpdateHandler {
   filter_message()
     .filter_command::<BotCommand>()
-    .branch(case![BotCommand::Help].endpoint(|| async { todo!() }))
+    .branch(case![BotCommand::Help].endpoint(send_help))
 }
 
-fn filter_message() -> UpdatesHandler {
+fn filter_message() -> UpdateHandler {
   Update::filter_message()
     .filter_map(|msg: Message| msg.from().cloned())
     .map(|msg: Message| msg.id)

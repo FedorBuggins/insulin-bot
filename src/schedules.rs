@@ -6,7 +6,7 @@ use tokio::{task::AbortHandle, time::interval};
 use crate::utils::event_publisher::EventPublisher;
 
 #[derive(Debug, Clone)]
-pub struct ReportRequestsCheckScheduled;
+pub struct LongInsulinReminderScheduled;
 
 pub fn init(ep: Arc<EventPublisher>) -> AbortHandle {
   let mut scheduler = AsyncScheduler::new();
@@ -25,8 +25,8 @@ fn schedule_report_requests_check(
   scheduler: &mut AsyncScheduler,
   event_publisher: Arc<EventPublisher>,
 ) {
-  scheduler.every(5.minutes()).plus(5.seconds()).run(move || {
-    event_publisher.send(ReportRequestsCheckScheduled);
+  scheduler.every(1.day()).plus(12.hours()).run(move || {
+    event_publisher.send(LongInsulinReminderScheduled);
     async {}
   });
 }
