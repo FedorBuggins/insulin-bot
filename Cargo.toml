@@ -10,7 +10,7 @@ resolver = "2"
 chrono = { version = "0.4", features = ["serde"] }
 clokwerk = { version = "0.4", features = ["async"] }
 dotenv = "0.15"
-env_logger = { version = "0.10", default-features = false }
+env_logger = { version = "0.11", default-features = false }
 futures-core = "0.3"
 log = { version = "0.4", features = ["release_max_level_info"] }
 serde = { version = "1", features = ["derive"] }
