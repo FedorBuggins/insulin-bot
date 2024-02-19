@@ -17,8 +17,9 @@
   <p align="center">
     An awesome telegram bot that will help you with diabetes!
     <br />
-    <a href="https://github.com/FedorBuggins/insulin-bot"><strong>Explore the docs »</strong></a>
+    <a href="https://t.me/insulin_stat_bot"><strong>View the Bot</strong></a>
     <br />
+    <a href="https://github.com/FedorBuggins/insulin-bot/issues">Report a bug</a>
     ·
     <a href="https://github.com/FedorBuggins/insulin-bot/issues">Request Feature</a>
   </p>
