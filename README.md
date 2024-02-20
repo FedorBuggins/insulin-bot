@@ -49,7 +49,7 @@ There are many people with diabetes in the world. Some people have been sick for
 ### Built With
 
 - [![Rust][Rust]][Rust-url]
-- [![Telegram][Telegram]][Telegram-url]
+- [![Teloxide][Teloxide]][Teloxide-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -106,5 +106,5 @@ Don't forget to give the project a star! Thanks again!
 
 [Rust]: https://img.shields.io/badge/rust-black?style=for-the-badge&logo=rust&logoColor=white
 [Rust-url]: https://www.rust-lang.org/
-[Telegram]: https://img.shields.io/badge/telegram-blue?style=for-the-badge&logo=telegram&logoColor=white
-[Telegram-url]: https://telegram.org/
+[Teloxide]: https://img.shields.io/badge/teloxide-black?style=for-the-badge&logo=telegram&logoColor=white
+[Teloxide-url]: https://github.com/teloxide/teloxide
