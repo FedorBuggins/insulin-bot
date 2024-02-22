@@ -1,17 +1,18 @@
 mod bot_commands;
 mod commands;
+mod common;
+mod db;
 mod event_handler;
 mod logging;
+mod model;
 mod schedules;
-
-extern crate insulin_bot as lib;
+mod utils;
 
 use std::{error::Error, sync::Arc};
 
 use bot_commands::StartCommand;
 use commands::{add_user, send_help};
 use dotenv::dotenv;
-use lib::{common, db, utils};
 use teloxide::{
   dispatching::{DpHandlerDescription, HandlerExt, UpdateFilterExt},
   dptree::{

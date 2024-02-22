@@ -37,6 +37,7 @@ impl Db {
     JsonCell::new(self.pool.clone(), key.into())
   }
 
+  #[must_use]
   pub fn users(&self) -> UserRepository {
     UserRepository::new(ExecutorHolder::new(self.pool()))
   }
@@ -54,7 +55,7 @@ mod tests {
 
   const TEST_DATABASE_URL: &str = "sqlite://db/test.db";
 
-  pub(super) async fn test_db() -> Result<Db> {
+  pub async fn test_db() -> Result<Db> {
     let sqlite_pool = SqlitePoolOptions::new()
       .idle_timeout(Duration::from_millis(100))
       .acquire_timeout(Duration::from_millis(100))
