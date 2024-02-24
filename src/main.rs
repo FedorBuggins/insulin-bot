@@ -53,7 +53,9 @@ async fn launch_bot() -> Result<(), Box<dyn Error>> {
   log::debug!("Prepare dependency injector ..");
   let ep = Arc::new(EventPublisher::new());
   let me = bot.get_me().await?;
-  let di = dptree::deps![bot.clone(), db, ep, me];
+  let mut di = dptree::deps![bot.clone(), db, ep, me];
+
+  app::sugar_measurement::prepare(&mut di);
 
   log::debug!("Start event handlers ..");
   event_handler::init(di.clone());
@@ -84,13 +86,16 @@ async fn init_dispatcher(bot: Bot, di: DependencyMap) -> Result<()> {
 }
 
 fn update_handler() -> UpdateHandler {
-  dptree::entry().branch(app::user::update_handler()).branch(
-    filter_message().branch(
-      dptree::entry()
-        .filter_command::<MenuCommand>()
-        .branch(case![MenuCommand::Help].endpoint(send_help)),
-    ),
-  )
+  dptree::entry()
+    .branch(app::user::update_handler())
+    .branch(app::sugar_measurement::update_handler())
+    .branch(
+      filter_message().branch(
+        dptree::entry()
+          .filter_command::<MenuCommand>()
+          .branch(case![MenuCommand::Help].endpoint(send_help)),
+      ),
+    )
 }
 
 fn filter_message() -> UpdateHandler {

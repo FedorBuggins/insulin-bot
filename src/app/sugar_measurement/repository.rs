@@ -1,15 +1,19 @@
 use teloxide::types::UserId;
 
-use crate::model::sugar_level::{SugarLevel, SugarMeasurement};
+use crate::db::{txn::ExecutorHolder, Db};
 
-use super::txn::ExecutorHolder;
+use super::{SugarLevel, SugarMeasurement};
 
-pub struct SugarMeasurementRepository {
+pub fn sugar_measurements(db: &Db, user_id: UserId) -> Repository {
+  Repository::new(user_id, db.exec())
+}
+
+pub struct Repository {
   user_id: UserId,
   exec: ExecutorHolder,
 }
 
-impl SugarMeasurementRepository {
+impl Repository {
   #[must_use]
   pub(super) fn new(user_id: UserId, exec: ExecutorHolder) -> Self {
     Self { user_id, exec }

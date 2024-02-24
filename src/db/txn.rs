@@ -31,12 +31,12 @@ pub async fn commit() -> common::Result<()> {
   Ok(())
 }
 
-pub(crate) struct ExecutorHolder {
+pub struct ExecutorHolder {
   pool: Arc<SqlitePool>,
 }
 
 impl ExecutorHolder {
-  pub(crate) fn new(pool: Arc<SqlitePool>) -> Self {
+  pub fn new(pool: Arc<SqlitePool>) -> Self {
     Self { pool }
   }
 
@@ -45,7 +45,7 @@ impl ExecutorHolder {
   /// # Panics
   ///
   /// Panics if shared transaction already borrowed
-  pub(crate) fn borrow(&self) -> Executor {
+  pub fn borrow(&self) -> Executor {
     match try_borrow_shared_txn() {
       Ok(Some(txn)) => Executor::Txn(Some(txn)),
       Ok(None) => panic!("Shared txn already borrowed"),
@@ -62,13 +62,13 @@ fn try_borrow_shared_txn(
 }
 
 #[derive(Debug)]
-pub(crate) enum Executor {
+pub enum Executor {
   Pool(Arc<SqlitePool>),
   Txn(Option<Transaction<'static, Sqlite>>),
 }
 
 impl Executor {
-  pub(crate) async fn begin(
+  pub async fn begin(
     &mut self,
   ) -> sqlx::Result<Transaction<'_, Sqlite>> {
     match self {
