@@ -1,19 +1,13 @@
 pub mod json_cell;
-pub mod sugar_measurement_repository;
 pub mod txn;
-pub mod user_repository;
 
 use std::{env, error::Error, sync::Arc};
 
 use sqlx::{sqlite::SqlitePoolOptions, Result, SqlitePool};
 
 pub use json_cell::JsonCell;
-use teloxide::types::UserId;
 
-use self::{
-  sugar_measurement_repository::SugarMeasurementRepository,
-  txn::ExecutorHolder, user_repository::UserRepository,
-};
+use self::txn::ExecutorHolder;
 
 const DATABASE_URL: &str = "DATABASE_URL";
 
@@ -32,28 +26,17 @@ impl Db {
     Self { pool: pool.into() }
   }
 
-  #[must_use]
   pub fn pool(&self) -> Arc<SqlitePool> {
     self.pool.clone()
   }
 
-  #[must_use]
+  #[allow(unused)]
   pub fn json_cell<T>(&self, key: impl Into<String>) -> JsonCell<T> {
     JsonCell::new(self.pool.clone(), key.into())
   }
 
-  #[must_use]
-  pub fn users(&self) -> UserRepository {
-    UserRepository::new(ExecutorHolder::new(self.pool()))
-  }
-
-  #[must_use]
-  pub fn sugar_measurements(
-    &self,
-    user_id: UserId,
-  ) -> SugarMeasurementRepository {
-    let exec = ExecutorHolder::new(self.pool());
-    SugarMeasurementRepository::new(user_id, exec)
+  pub fn exec(&self) -> ExecutorHolder {
+    ExecutorHolder::new(self.pool())
   }
 }
 

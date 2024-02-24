@@ -1,17 +1,14 @@
+mod app;
 mod bot_commands;
-mod commands;
 mod common;
 mod db;
 mod event_handler;
 mod logging;
-mod model;
 mod schedules;
 mod utils;
 
 use std::{error::Error, sync::Arc};
 
-use bot_commands::StartCommand;
-use commands::{add_user, send_help};
 use dotenv::dotenv;
 use teloxide::{
   dispatching::{DpHandlerDescription, HandlerExt, UpdateFilterExt},
@@ -75,7 +72,7 @@ async fn init_dispatcher(bot: Bot, di: DependencyMap) -> Result<()> {
   let polling = Polling::builder(bot.clone()).build();
   let handler = entry()
     .inspect(logging::log_update)
-    .branch(command_handler());
+    .branch(update_handler());
   Dispatcher::builder(bot, handler)
     .dependencies(di)
     .default_handler(logging::log_unhandled_update)
@@ -86,18 +83,14 @@ async fn init_dispatcher(bot: Bot, di: DependencyMap) -> Result<()> {
   Ok(())
 }
 
-fn command_handler() -> UpdateHandler {
-  filter_message()
-    .branch(
-      dptree::entry()
-        .filter_command::<StartCommand>()
-        .endpoint(add_user),
-    )
-    .branch(
+fn update_handler() -> UpdateHandler {
+  dptree::entry().branch(app::user::update_handler()).branch(
+    filter_message().branch(
       dptree::entry()
         .filter_command::<MenuCommand>()
         .branch(case![MenuCommand::Help].endpoint(send_help)),
-    )
+    ),
+  )
 }
 
 fn filter_message() -> UpdateHandler {
@@ -106,4 +99,9 @@ fn filter_message() -> UpdateHandler {
     .map(|msg: Message| msg.id)
     .map(|msg: Message| msg.chat.id)
     .map(|user: User| user.id)
+}
+
+async fn send_help(bot: Bot, chat_id: ChatId) -> Result<()> {
+  bot.send_message(chat_id, "Help (todo)").await?;
+  Ok(())
 }
