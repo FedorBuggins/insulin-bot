@@ -1,3 +1,4 @@
 # Summary
 
-- [Chapter 1](./chapter_1.md)
+- [Architecture](./architecture.md)
+- [DB Schema](./chapter_1.md)

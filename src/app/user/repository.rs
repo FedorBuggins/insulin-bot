@@ -1,14 +1,17 @@
 use teloxide::types::UserId;
 
-use super::txn::ExecutorHolder;
+use crate::db::{txn::ExecutorHolder, Db};
 
-pub struct UserRepository {
+pub fn users(db: &Db) -> Repository {
+  Repository::new(db.exec())
+}
+
+pub struct Repository {
   exec: ExecutorHolder,
 }
 
-impl UserRepository {
-  #[must_use]
-  pub(super) fn new(exec: ExecutorHolder) -> Self {
+impl Repository {
+  pub fn new(exec: ExecutorHolder) -> Self {
     Self { exec }
   }
 
@@ -19,6 +22,7 @@ impl UserRepository {
       .await
   }
 
+  /// Reactivates user if disabled
   pub async fn add(&mut self, user_id: UserId) -> sqlx::Result<()> {
     let user_id: i64 = user_id.0.try_into().unwrap();
     sqlx::query!(

@@ -11,4 +11,6 @@ pub enum StartCommand {
 pub enum MenuCommand {
   #[command(description = "Инструкция")]
   Help,
+  #[command(description = "Указать уровень сахара")]
+  SugarLevel,
 }

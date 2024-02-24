@@ -1,4 +1,4 @@
-# Data Scheme
+# Data Schema
 
 ```mermaid
 erDiagram
