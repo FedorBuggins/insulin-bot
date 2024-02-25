@@ -8,23 +8,19 @@ use teloxide::{
 use tokio::time::sleep;
 
 use crate::{
+  app::plugins,
   common::Result,
   logging,
-  schedules::LongInsulinReminderScheduled,
   utils::event_publisher::{AnyEvent, Event, EventPublisher},
 };
 
-type EventHandler = Handler<'static, DependencyMap, ()>;
+pub type EventHandler = Handler<'static, DependencyMap, ()>;
 
 pub fn init(di: DependencyMap) {
-  let event_handler = dptree::entry()
-    .inspect(log_event_received)
-    .branch(filter_event::<LongInsulinReminderScheduled>().chain(
-      handler(|| async {
-        log::info!("Long Insulin Reminder! (todo)");
-        Ok(())
-      }),
-    ));
+  let mut event_handler = dptree::entry().inspect(log_event_received);
+  for plugin in plugins() {
+    event_handler = event_handler.branch(plugin.event_handler());
+  }
   tokio::spawn(launch(event_handler, di));
 }
 
@@ -33,11 +29,11 @@ fn log_event_received(event: Event) {
   log::info!("Receive event {event:?}");
 }
 
-fn filter_event<T: AnyEvent>() -> EventHandler {
+pub fn filter_event<T: AnyEvent>() -> EventHandler {
   dptree::filter_map(|event: Event| event.downcast::<T>())
 }
 
-fn handler<F, A>(f: F) -> EventHandler
+pub fn handler<F, A>(f: F) -> EventHandler
 where
   F: Injectable<DependencyMap, Result<()>, A> + Send + Sync + 'static,
   A: 'static,

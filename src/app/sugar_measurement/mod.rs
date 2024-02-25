@@ -4,22 +4,17 @@ use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use teloxide::{
-  dispatching::dialogue::{Dialogue, InMemStorage},
-  dptree::case,
-  prelude::*,
+  dispatching::dialogue::InMemStorage, dptree::case, prelude::*,
 };
 
 use crate::{
-  bot_commands::MenuCommand, common::Result, db::Db, filter_message,
-  UpdateHandler,
+  app, bot_commands::MenuCommand, common::Result, db::Db,
+  utils::filter_message, UpdateHandler,
 };
 
 use self::repository::sugar_measurements;
 
-type SugarLevelDialogue = Dialogue<
-  SugarLevelDialogueState,
-  InMemStorage<SugarLevelDialogueState>,
->;
+type Dialog = Dialogue<State, InMemStorage<State>>;
 
 pub struct SugarMeasurement {
   pub date_time: DateTime<Utc>,
@@ -52,57 +47,53 @@ impl SugarLevel {
 }
 
 #[derive(Default, Clone)]
-enum SugarLevelDialogueState {
+enum State {
   #[default]
-  None,
+  Default,
   Accepting,
 }
 
-pub fn prepare(di: &mut DependencyMap) {
-  di.insert(InMemStorage::<SugarLevelDialogueState>::new());
+pub struct Plugin;
+
+impl app::Plugin for Plugin {
+  fn prepare(&self, di: &mut DependencyMap) {
+    di.insert(InMemStorage::<State>::new());
+  }
+
+  fn update_handler(&self) -> UpdateHandler {
+    filter_message()
+      .enter_dialogue::<Message, InMemStorage<State>, State>()
+      .branch(dptree::entry().filter_command::<MenuCommand>().branch(
+        case![MenuCommand::SugarLevel].endpoint(prepare_accepting),
+      ))
+      .branch(case![State::Accepting].endpoint(accept))
+  }
 }
 
-pub fn update_handler() -> UpdateHandler {
-  filter_message()
-    .enter_dialogue::<Message, InMemStorage<SugarLevelDialogueState>, SugarLevelDialogueState>()
-    .branch(
-      dptree::entry().filter_command::<MenuCommand>().branch(
-        case![MenuCommand::SugarLevel]
-          .endpoint(prepare_sugar_level_accepting),
-      ),
-    )
-    .branch(
-      case![SugarLevelDialogueState::Accepting]
-        .endpoint(accept_sugar_level),
-    )
-}
-
-async fn prepare_sugar_level_accepting(
+async fn prepare_accepting(
   bot: Bot,
   chat_id: ChatId,
-  dialogue: SugarLevelDialogue,
+  dialogue: Dialog,
 ) -> Result<()> {
   bot
     .send_message(chat_id, "Отправьте уровень сахара в ммоль/л")
     .await?;
-  dialogue
-    .update(SugarLevelDialogueState::Accepting)
-    .await
-    .unwrap();
+  dialogue.update(State::Accepting).await.unwrap();
   Ok(())
 }
 
-async fn accept_sugar_level(
+async fn accept(
   bot: Bot,
   msg: Message,
   user_id: UserId,
   db: Arc<Db>,
-  dialogue: SugarLevelDialogue,
+  dialogue: Dialog,
 ) -> Result<()> {
-  if let Some(sugar_level) = parse_sugar_level(msg.text()) {
+  if let Some(sugar_level) = parse(msg.text()) {
     sugar_measurements(&db, user_id)
       .add(SugarMeasurement::from_now(sugar_level))
       .await?;
+    bot.send_message(msg.chat.id, "✅").await?;
   } else {
     bot
       .send_message(msg.chat.id, "Неправильный формат (todo)")
@@ -112,6 +103,6 @@ async fn accept_sugar_level(
   Ok(())
 }
 
-fn parse_sugar_level(s: Option<&str>) -> Option<SugarLevel> {
+fn parse(s: Option<&str>) -> Option<SugarLevel> {
   Some(SugarLevel::from_millimoles_per_liter(s?.parse().ok()?))
 }

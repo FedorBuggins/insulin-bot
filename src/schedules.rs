@@ -1,16 +1,16 @@
 use std::{sync::Arc, time::Duration};
 
-use clokwerk::{AsyncScheduler, Job, TimeUnits};
+use clokwerk::AsyncScheduler;
 use tokio::{task::AbortHandle, time::interval};
 
-use crate::utils::event_publisher::EventPublisher;
+use crate::{app::plugins, utils::event_publisher::EventPublisher};
 
-#[derive(Debug, Clone)]
-pub struct LongInsulinReminderScheduled;
-
+#[allow(clippy::needless_pass_by_value)]
 pub fn init(ep: Arc<EventPublisher>) -> AbortHandle {
   let mut scheduler = AsyncScheduler::new();
-  schedule_report_requests_check(&mut scheduler, ep);
+  for plugin in plugins() {
+    plugin.schedule(&mut scheduler, ep.clone());
+  }
   tokio::spawn(async move {
     let mut interval = interval(Duration::from_secs(5));
     loop {
@@ -19,14 +19,4 @@ pub fn init(ep: Arc<EventPublisher>) -> AbortHandle {
     }
   })
   .abort_handle()
-}
-
-fn schedule_report_requests_check(
-  scheduler: &mut AsyncScheduler,
-  event_publisher: Arc<EventPublisher>,
-) {
-  scheduler.every(1.day()).plus(12.hours()).run(move || {
-    event_publisher.send(LongInsulinReminderScheduled);
-    async {}
-  });
 }

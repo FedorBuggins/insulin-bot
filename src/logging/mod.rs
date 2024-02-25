@@ -1,21 +1,13 @@
 pub mod critical;
 
 use std::{
-  env, fmt,
-  future::Future,
+  env,
   io::{self, Write},
-  pin::Pin,
-  process::Command,
   sync::{Arc, Mutex},
-  time::Duration,
 };
 
 use chrono::Local;
-use teloxide::{
-  error_handlers::ErrorHandler,
-  types::{Update, UpdateKind},
-};
-use tokio::time::sleep;
+use teloxide::types::{Update, UpdateKind};
 
 static LAST_LOG: Mutex<(usize, String)> =
   Mutex::new((0, String::new()));
@@ -128,41 +120,4 @@ pub async fn log_unhandled_update(upd: Arc<Update>) {
   let chat_name =
     chat_title_or_id(&upd).unwrap_or("<unknown>".to_string());
   log::warn!("Unhandled {upd_kind} #{upd_id} from {chat_name}");
-}
-
-type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
-
-pub struct UpdateListenerErrorHandler;
-
-impl UpdateListenerErrorHandler {
-  const DELAY: Duration = Duration::from_secs(2);
-}
-
-impl<E> ErrorHandler<E> for UpdateListenerErrorHandler
-where
-  E: fmt::Debug + fmt::Display,
-{
-  fn handle_error(self: Arc<Self>, err: E) -> BoxFuture<'static, ()> {
-    log::error!("{err}");
-    log::debug!("Sleep {} sec ..", Self::DELAY.as_secs());
-    Box::pin(sleep(Self::DELAY))
-  }
-}
-
-pub fn for_update_listener() -> Arc<UpdateListenerErrorHandler> {
-  UpdateListenerErrorHandler.into()
-}
-
-pub fn log_toast(text: &str) {
-  log::info!("{text}");
-  toast(text);
-}
-
-fn toast(text: &str) {
-  const DARK_GREEN: &str = "#1e6c30";
-  let _ = Command::new("termux-toast")
-    .args(["-g", "top"])
-    .args(["-b", DARK_GREEN])
-    .arg(text)
-    .spawn();
 }
