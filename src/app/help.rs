@@ -2,8 +2,10 @@ use teloxide::{dptree::case, prelude::*};
 
 use crate::{
   app, bot_commands::MenuCommand, common::Result,
-  utils::filter_message, UpdateHandler,
+  utils::filter_message,
 };
+
+use super::UpdateHandler;
 
 pub struct Plugin;
 

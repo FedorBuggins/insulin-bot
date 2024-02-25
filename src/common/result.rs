@@ -49,4 +49,12 @@ impl From<String> for Error {
   }
 }
 
+/// Maps `error` to [`Error::Other`]
+pub fn any<E>(error: E) -> Error
+where
+  E: std::error::Error + Send + Sync + 'static,
+{
+  Error::Other(Box::new(error))
+}
+
 impl std::error::Error for Error {}

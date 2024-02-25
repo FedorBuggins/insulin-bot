@@ -8,14 +8,20 @@ use teloxide::{
 };
 
 use crate::{
-  app, bot_commands::MenuCommand, common::Result, db::Db,
-  utils::filter_message, UpdateHandler,
+  app,
+  bot_commands::MenuCommand,
+  common::{any, Result},
+  db::Db,
+  utils::filter_message,
 };
 
 use self::repository::sugar_measurements;
 
+use super::UpdateHandler;
+
 type Dialog = Dialogue<State, InMemStorage<State>>;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SugarMeasurement {
   pub date_time: DateTime<Utc>,
   pub level: SugarLevel,
@@ -28,6 +34,7 @@ impl SugarMeasurement {
   }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SugarLevel {
   millimoles_per_liter: f32,
 }
@@ -41,7 +48,7 @@ impl SugarLevel {
     }
   }
 
-  pub fn as_millimoles_per_liter(&self) -> f32 {
+  pub fn as_millimoles_per_liter(self) -> f32 {
     self.millimoles_per_liter
   }
 }
@@ -49,7 +56,7 @@ impl SugarLevel {
 #[derive(Default, Clone)]
 enum State {
   #[default]
-  Default,
+  Ignoring,
   Accepting,
 }
 
@@ -63,14 +70,16 @@ impl app::Plugin for Plugin {
   fn update_handler(&self) -> UpdateHandler {
     filter_message()
       .enter_dialogue::<Message, InMemStorage<State>, State>()
-      .branch(dptree::entry().filter_command::<MenuCommand>().branch(
-        case![MenuCommand::SugarLevel].endpoint(prepare_accepting),
-      ))
+      .branch(
+        dptree::entry()
+          .filter_command::<MenuCommand>()
+          .branch(case![MenuCommand::SugarLevel].endpoint(ask)),
+      )
       .branch(case![State::Accepting].endpoint(accept))
   }
 }
 
-async fn prepare_accepting(
+async fn ask(
   bot: Bot,
   chat_id: ChatId,
   dialogue: Dialog,
@@ -78,7 +87,7 @@ async fn prepare_accepting(
   bot
     .send_message(chat_id, "Отправьте уровень сахара в ммоль/л")
     .await?;
-  dialogue.update(State::Accepting).await.unwrap();
+  dialogue.update(State::Accepting).await.map_err(any)?;
   Ok(())
 }
 
@@ -94,15 +103,27 @@ async fn accept(
       .add(SugarMeasurement::from_now(sugar_level))
       .await?;
     bot.send_message(msg.chat.id, "✅").await?;
+    dialogue.reset().await.map_err(any)?;
   } else {
     bot
       .send_message(msg.chat.id, "Неправильный формат (todo)")
       .await?;
   }
-  dialogue.reset().await.unwrap();
   Ok(())
 }
 
 fn parse(s: Option<&str>) -> Option<SugarLevel> {
   Some(SugarLevel::from_millimoles_per_liter(s?.parse().ok()?))
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn parse_5_dot_7() {
+    let v = parse(Some("5.7"));
+    let expected = Some(SugarLevel::from_millimoles_per_liter(5.7));
+    assert_eq!(expected, v);
+  }
 }

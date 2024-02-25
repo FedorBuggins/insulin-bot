@@ -9,7 +9,6 @@ mod utils;
 
 use std::{error::Error, sync::Arc};
 
-use app::UpdateHandler;
 use dotenv::dotenv;
 use teloxide::{
   dptree::di::{Asyncify, Injectable},

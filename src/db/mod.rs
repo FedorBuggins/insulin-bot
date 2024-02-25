@@ -30,7 +30,6 @@ impl Db {
     self.pool.clone()
   }
 
-  #[allow(unused)]
   pub fn json_cell<T>(&self, key: impl Into<String>) -> JsonCell<T> {
     JsonCell::new(self.pool.clone(), key.into())
   }
@@ -41,16 +40,18 @@ impl Db {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
   use std::time::Duration;
 
   use sqlx::sqlite::SqlitePoolOptions;
+  use tokio::sync::Semaphore;
 
   use crate::common::Result;
 
   use super::Db;
 
-  const TEST_DATABASE_URL: &str = "sqlite://db/test.db";
+  pub const TEST_DATABASE_URL: &str = "sqlite://db/test.db";
+  pub static SHARED_TESTS_GUARD: Semaphore = Semaphore::const_new(1);
 
   pub async fn test_db() -> Result<Db> {
     let sqlite_pool = SqlitePoolOptions::new()

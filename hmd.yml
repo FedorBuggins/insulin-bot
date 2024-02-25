@@ -5,5 +5,5 @@ prepare_prod_db: sqlx mig run
 prepare_test_db: sqlx mig run --database-url=sqlite://db/test.db
 test: cargo test
 build: cargo build --release
-send_noti: telegram-send "✅ insulin-bot starting .."
+before_run: telegram-send "✅ @insulin_stat_bot starting .."
 run: cargo run --release

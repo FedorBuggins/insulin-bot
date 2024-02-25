@@ -55,25 +55,9 @@ where
 
 #[cfg(test)]
 mod tests {
-  use std::time::Duration;
-
   use serde::{Deserialize, Serialize};
-  use sqlx::sqlite::SqlitePoolOptions;
-  use tokio::sync::Semaphore;
 
-  use crate::{common::Result, db::Db};
-
-  const TEST_DATABASE_URL: &str = "sqlite://db/test.db";
-  static SHARED_TESTS_GUARD: Semaphore = Semaphore::const_new(1);
-
-  async fn test_db() -> Result<Db> {
-    let sqlite_pool = SqlitePoolOptions::new()
-      .idle_timeout(Duration::from_millis(100))
-      .acquire_timeout(Duration::from_millis(100))
-      .connect(TEST_DATABASE_URL)
-      .await?;
-    Ok(Db::new(sqlite_pool))
-  }
+  use crate::db::tests::{test_db, SHARED_TESTS_GUARD};
 
   #[derive(Debug, PartialEq, Serialize, Deserialize)]
   struct Data {

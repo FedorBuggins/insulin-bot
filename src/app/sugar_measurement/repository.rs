@@ -69,3 +69,30 @@ impl Repository {
     Ok(())
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use crate::{
+    app::user::repository::users,
+    db::{tests::test_db, txn},
+  };
+
+  use super::*;
+
+  #[tokio::test]
+  async fn save_5_dot_7() {
+    let test_db = test_db().await.unwrap();
+    txn::begin(test_db.pool(), async {
+      let user = UserId(1);
+      let sugar_level = SugarLevel::from_millimoles_per_liter(5.7);
+      let rec = SugarMeasurement::from_now(sugar_level);
+      users(&test_db).add(user).await.unwrap();
+      let mut measurements = sugar_measurements(&test_db, user);
+      measurements.add(rec).await.unwrap();
+      let recs = measurements.fetch_all().await.unwrap();
+      assert_eq!(recs, vec![rec]);
+    })
+    .await
+    .unwrap();
+  }
+}

@@ -6,10 +6,11 @@ use teloxide::{dispatching::HandlerExt, types::UserId};
 
 use crate::{
   app, bot_commands::StartCommand, db::Db, utils::filter_message,
-  UpdateHandler,
 };
 
 use self::repository::users;
+
+use super::UpdateHandler;
 
 pub struct Plugin;
 

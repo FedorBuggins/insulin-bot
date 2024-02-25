@@ -3,7 +3,7 @@ use teloxide::types::UserId;
 use crate::db::{txn::ExecutorHolder, Db};
 
 pub fn users(db: &Db) -> Repository {
-  Repository::new(db.exec())
+  Repository { exec: db.exec() }
 }
 
 pub struct Repository {
@@ -11,20 +11,22 @@ pub struct Repository {
 }
 
 impl Repository {
-  pub fn new(exec: ExecutorHolder) -> Self {
-    Self { exec }
-  }
-
+  #[allow(clippy::cast_sign_loss)]
   pub async fn fetch_all(&self) -> sqlx::Result<Vec<UserId>> {
     sqlx::query!("SELECT id FROM users WHERE disabled = FALSE")
-      .map(|rec| UserId(rec.id.try_into().unwrap()))
+      .map(|rec| UserId(rec.id as _))
       .fetch_all(&mut self.exec.borrow())
       .await
   }
 
-  /// Reactivates user if disabled
+  /// Registers user at system. Reactivates user if disabled.
+  ///
+  /// # Implementation details
+  ///
+  /// Replaces user record with order change
+  #[allow(clippy::cast_possible_wrap)]
   pub async fn add(&mut self, user_id: UserId) -> sqlx::Result<()> {
-    let user_id: i64 = user_id.0.try_into().unwrap();
+    let user_id = user_id.0 as i64;
     sqlx::query!(
       "REPLACE INTO users (id, disabled) VALUES (?, FALSE)",
       user_id

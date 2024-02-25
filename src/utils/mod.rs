@@ -6,7 +6,7 @@ use teloxide::{
   types::{Message, Update, User},
 };
 
-use crate::UpdateHandler;
+use crate::app::UpdateHandler;
 
 pub fn filter_message() -> UpdateHandler {
   Update::filter_message()
