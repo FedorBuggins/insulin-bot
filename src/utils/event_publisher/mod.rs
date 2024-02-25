@@ -25,7 +25,6 @@ impl Event {
     Self { debug, inner }
   }
 
-  #[must_use]
   pub fn downcast<T: AnyEvent>(&self) -> Option<T> {
     self.inner.downcast_ref().cloned()
   }
@@ -42,13 +41,11 @@ pub struct EventPublisher {
 }
 
 impl EventPublisher {
-  #[must_use]
   pub fn new() -> Self {
     let (tx, _) = broadcast::channel(10);
     Self { tx }
   }
 
-  #[must_use]
   pub fn subscribe(&self) -> broadcast::Receiver<Event> {
     self.tx.subscribe()
   }

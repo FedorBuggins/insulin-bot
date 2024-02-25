@@ -5,7 +5,8 @@ use crate::db::{txn::ExecutorHolder, Db};
 use super::{SugarLevel, SugarMeasurement};
 
 pub fn sugar_measurements(db: &Db, user_id: UserId) -> Repository {
-  Repository::new(user_id, db.exec())
+  let exec = db.exec();
+  Repository { user_id, exec }
 }
 
 pub struct Repository {
@@ -14,11 +15,6 @@ pub struct Repository {
 }
 
 impl Repository {
-  #[must_use]
-  pub(super) fn new(user_id: UserId, exec: ExecutorHolder) -> Self {
-    Self { user_id, exec }
-  }
-
   #[allow(clippy::cast_possible_truncation)]
   pub async fn fetch_all(
     &self,
@@ -27,7 +23,7 @@ impl Repository {
     sqlx::query!(
       r#"
         SELECT date_time, millimoles_per_liter
-        FROM sugar_level_measurements
+        FROM sugar_measurements
         WHERE user_id = ?
       "#,
       user_id
@@ -57,7 +53,7 @@ impl Repository {
       sugar_measurement.level.as_millimoles_per_liter();
     sqlx::query!(
       r#"
-        INSERT INTO sugar_level_measurements (
+        INSERT INTO sugar_measurements (
           user_id,
           date_time,
           millimoles_per_liter

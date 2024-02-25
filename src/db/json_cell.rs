@@ -10,7 +10,6 @@ pub struct JsonCell<T> {
 }
 
 impl<T> JsonCell<T> {
-  #[must_use]
   pub fn new(pool: Arc<SqlitePool>, key: String) -> Self {
     let marker = PhantomData;
     Self { pool, key, marker }

@@ -10,7 +10,6 @@ pub enum Error {
 }
 
 impl Error {
-  #[must_use]
   pub fn is_network_problem(&self) -> bool {
     matches!(self, Self::Teloxide(teloxide::RequestError::Network(_)))
   }

@@ -56,27 +56,22 @@ async fn launch() -> Result<(), Box<dyn Error>> {
   Asyncify(schedules::init).inject(&di)().await;
 
   log::info!("Bot started 🎉");
-  dispatch(bot, di).await?;
+  dispatch(bot, di).await;
 
   log::info!("Bot stopped 🏁");
   Ok(())
 }
 
-async fn dispatch(bot: Bot, di: DependencyMap) -> Result<()> {
-  Dispatcher::builder(bot, update_handler())
+async fn dispatch(bot: Bot, di: DependencyMap) {
+  let mut handler = dptree::entry().inspect(logging::log_update);
+  for plugin in plugins() {
+    handler = handler.branch(plugin.update_handler());
+  }
+  Dispatcher::builder(bot, handler)
     .dependencies(di)
     .default_handler(logging::log_unhandled_update)
     .enable_ctrlc_handler()
     .build()
     .dispatch()
     .await;
-  Ok(())
-}
-
-fn update_handler() -> UpdateHandler {
-  let mut handler = dptree::entry().inspect(logging::log_update);
-  for plugin in plugins() {
-    handler = handler.branch(plugin.update_handler());
-  }
-  handler
 }
