@@ -36,19 +36,19 @@ impl SugarMeasurement {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SugarLevel {
-  millimoles_per_liter: f32,
+  millimoles_per_liter: f64,
 }
 
 impl SugarLevel {
   pub fn from_millimoles_per_liter(
-    millimoles_per_liter: f32,
+    millimoles_per_liter: f64,
   ) -> Self {
     Self {
       millimoles_per_liter,
     }
   }
 
-  pub fn as_millimoles_per_liter(self) -> f32 {
+  pub fn as_millimoles_per_liter(self) -> f64 {
     self.millimoles_per_liter
   }
 }

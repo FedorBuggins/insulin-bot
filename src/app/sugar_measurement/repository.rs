@@ -15,7 +15,6 @@ pub struct Repository {
 }
 
 impl Repository {
-  #[allow(clippy::cast_possible_truncation)]
   pub async fn fetch_all(
     &self,
   ) -> sqlx::Result<Vec<SugarMeasurement>> {
@@ -31,7 +30,7 @@ impl Repository {
     .map(|rec| SugarMeasurement {
       date_time: rec.date_time.and_utc(),
       level: SugarLevel::from_millimoles_per_liter(
-        rec.millimoles_per_liter as _,
+        rec.millimoles_per_liter,
       ),
     })
     .fetch_all(&mut self.exec.borrow())
