@@ -37,9 +37,8 @@ impl Repository {
     .await
   }
 
-  #[allow(clippy::cast_possible_wrap)]
   fn user_id(&self) -> i64 {
-    self.user_id.0 as i64
+    self.user_id.0.try_into().unwrap()
   }
 
   pub async fn add(
@@ -79,7 +78,7 @@ mod tests {
   use super::*;
 
   #[tokio::test]
-  async fn save_5_dot_7() {
+  async fn add_and_fetch_all() {
     let test_db = test_db().await.unwrap();
     txn::begin(test_db.pool(), async {
       let user = UserId(1);

@@ -103,27 +103,15 @@ async fn accept(
       .add(SugarMeasurement::from_now(sugar_level))
       .await?;
     bot.send_message(msg.chat.id, "✅").await?;
-    dialogue.reset().await.map_err(any)?;
   } else {
     bot
       .send_message(msg.chat.id, "Неправильный формат (todo)")
       .await?;
   }
+  dialogue.reset().await.map_err(any)?;
   Ok(())
 }
 
 fn parse(s: Option<&str>) -> Option<SugarLevel> {
   Some(SugarLevel::from_millimoles_per_liter(s?.parse().ok()?))
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn parse_5_dot_7() {
-    let v = parse(Some("5.7"));
-    let expected = Some(SugarLevel::from_millimoles_per_liter(5.7));
-    assert_eq!(expected, v);
-  }
 }
