@@ -1,4 +1,5 @@
 mod help;
+mod insulin_injection;
 mod long_insulin;
 mod sugar_measurement;
 mod user;
@@ -45,6 +46,7 @@ pub trait Plugin {
 pub fn plugins() -> Vec<Box<dyn Plugin>> {
   vec![
     Box::new(help::Plugin),
+    Box::new(insulin_injection::Plugin),
     Box::new(long_insulin::Plugin),
     Box::new(sugar_measurement::Plugin),
     Box::new(user::Plugin),

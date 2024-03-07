@@ -13,4 +13,6 @@ pub enum MenuCommand {
   Help,
   #[command(description = "Указать уровень сахара")]
   SugarLevel,
+  #[command(description = "Указать введенный инсулин")]
+  InsulinInjection,
 }
